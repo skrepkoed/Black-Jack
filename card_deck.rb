@@ -9,7 +9,7 @@ class CardDeck
   end
 
   def random_card
-    add_card Card.new(Card::RANKS.sample, Card::SUITS.keys.sample)
+    add_card Card.random_card
   end
 
   def add_card(card)
