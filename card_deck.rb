@@ -10,6 +10,7 @@ class CardDeck
 
   def random_card
     add_card Card.random_card
+    cards.first
   end
 
   def add_card(card)
