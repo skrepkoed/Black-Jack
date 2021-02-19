@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 class Player
-  attr_accessor :account, :hand, :current_points
+  attr_accessor :account, :hand
 
   def initialize(*_args)
     @account = 100
     @hand = []
-    @current_points = 0
+  end
+
+  def default
+    @hand = []
   end
 end

@@ -10,7 +10,7 @@ class CardDeck
 
   def random_card
     add_card Card.random_card
-    cards.first
+    cards.last
   end
 
   def distribute_cards(number, hand)
