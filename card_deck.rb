@@ -13,6 +13,10 @@ class CardDeck
     cards.first
   end
 
+  def distribute_cards(number, hand)
+    number.times { hand << random_card }
+  end
+
   def add_card(card)
     cards << card unless cards.include? card
   end
