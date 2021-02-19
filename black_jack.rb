@@ -26,6 +26,7 @@ class BlackJack
     card_deck.distribute_cards(2, current_player.hand)
     card_deck.distribute_cards(2, diller.hand)
     current_hand
+    send(*diller.next_move)
   end
 
   def current_hand
@@ -37,16 +38,18 @@ class BlackJack
 
   def options
     puts 'Choose what you want to do next:'
-    game_options = { 'Draw additional card' => :draw_card, 'Pass' => :pass, 'Face up' => :face_up }
+    game_options = { 'Draw additional card' => [:draw_card, current_player],
+                     'Pass' => :pass,
+                     'Face up' => :face_up }
     options = game_options.keys
     (1..options.size).each { |number| puts "#{number}. #{options[number - 1]}" }
     input = gets.chomp.to_i
-    send(game_options[options[input - 1]])
+    send(game_options[*options[input - 1]])
   end
 
-  def draw_card
-    card_deck.distribute_cards(1, current_player.hand)
-    evaluate_hand(current_player.hand)
+  def draw_card(player)
+    card_deck.distribute_cards(1, player.hand)
+    evaluate_hand(player.hand)
   end
 
   def pass; end
