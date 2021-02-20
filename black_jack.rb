@@ -91,7 +91,7 @@ class BlackJack
     if draw?(current_player_score, diller_score)
       bank.draw(current_player, diller)
       puts "Draw. Your current account: #{current_player.account}"
-    elsif !(exceed_21?(current_player_score) && exceed_21?(diller_score))
+    elsif !exceed_21?(current_player_score)
       calculate_score(current_player_score, diller_score)
     else
       bank.give_gain(diller)
@@ -102,8 +102,11 @@ class BlackJack
   end
 
   def calculate_score(player1_score, player2_score)
-    case player1_score <=> player2_score
+    case (player1_score <=> player2_score) <=> (21 <=> player2_score)
     when 1
+      bank.give_gain(current_player)
+      puts "You win! Your current account: #{current_player.account}"
+    when 0
       bank.give_gain(current_player)
       puts "You win! Your current account: #{current_player.account}"
     when -1

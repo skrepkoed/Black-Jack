@@ -18,6 +18,11 @@ class CardDeck
   end
 
   def add_card(card)
-    cards << card unless cards.include? card
+    @cards = [] if cards.size == 52
+    if cards.include? card
+      random_card
+    else
+      cards << card
+    end
   end
 end
