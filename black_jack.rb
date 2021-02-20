@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-require 'pry'
 require_relative 'current_player'
 require_relative 'diller'
 require_relative 'bank'
 require_relative 'card_deck'
+require_relative 'evaluation_score'
 class BlackJack
-  CardPoints = { J: 10, Q: 10, K: 10, A: 11 }.freeze
-
+  include EvaluationScore
   def self.new_game
     puts 'Enter your name:'
     @current_player = CurrentPlayer.new(gets.chomp)
@@ -15,6 +14,18 @@ class BlackJack
     set_new_game
     puts 'Goodbye!'
   end
+
+  class << self
+    attr_reader :current_player
+  end
+
+  def self.game_options
+    @game_options['Draw additional card'] = [:draw_card, current_player]
+    @game_options
+  end
+
+  @game_options = { 'Pass' => :pass,
+                    'Face up' => :face_up }
 
   def self.set_new_game
     [@current_player, @diller].map(&:default)
@@ -45,9 +56,7 @@ class BlackJack
     end
     face_up
   rescue RuntimeError
-    puts 'Would you like to try again? Y/N'
-    input = gets.chomp
-    BlackJack.set_new_game if input == 'Y'
+    again?
   end
 
   def current_hand
@@ -59,16 +68,14 @@ class BlackJack
 
   def options
     puts 'Choose what you want to do next:'
-    game_options = { 'Draw additional card' => [:draw_card, current_player],
-                     'Pass' => :pass,
-                     'Face up' => :face_up }
-    game_options = { 'Face up' => :face_up } if current_player.hand.size == 3 || diller.hand.size == 3
+    game_options = limit_actions(current_player, diller)
+    game_options ||= BlackJack.game_options
     options = game_options.keys
     (1..options.size).each { |number| puts "#{number}. #{options[number - 1]}" }
     input = gets.chomp.to_i
     action = game_options[options[input - 1]]
     clear_screen
-    send(*action)
+    ensure_action(action)
   end
 
   def draw_card(player)
@@ -85,65 +92,27 @@ class BlackJack
     define_winner
   end
 
-  def define_winner
-    current_player_score = evaluate_hand(current_player.hand)
-    diller_score = evaluate_hand(diller.hand)
-    if draw?(current_player_score, diller_score)
-      bank.draw(current_player, diller)
-      puts "Draw. Your current account: #{current_player.account}"
-    elsif !exceed_21?(current_player_score)
-      calculate_score(current_player_score, diller_score)
-    else
-      bank.give_gain(diller)
-      puts "You lose! Your current account: #{current_player.account}"
-    end
-    positive_account?(current_player, diller)
-    raise RuntimeError
-  end
-
-  def calculate_score(player1_score, player2_score)
-    case (player1_score <=> player2_score) <=> (21 <=> player2_score)
-    when 1
-      bank.give_gain(current_player)
-      puts "You win! Your current account: #{current_player.account}"
-    when 0
-      bank.give_gain(current_player)
-      puts "You win! Your current account: #{current_player.account}"
-    when -1
-      bank.give_gain(diller)
-      puts "You lose! Your current account: #{current_player.account}"
-    end
-  end
-
-  def draw?(player1_score, player2_score)
-    if player1_score == player2_score || exceed_21?(player1_score) && exceed_21?(player2_score)
-      true
-    else
-      false
-    end
-  end
-
-  def exceed_21?(hands_points)
-    hands_points > 21
-  end
-
-  def evaluate_hand(hand)
-    ranks = hand.map(&:rank)
-    points = ranks.map { |rank| define_card_point(rank) }.sum
-    points -= 10 * (ranks.count { |rank| rank == :A } - 1) if points > 21 && hand.map(&:rank).include?(:A)
-    points
-  end
-
-  def define_card_point(card_rank)
-    CardPoints[card_rank] || card_rank
-  end
-
   def report_hand(player, hidden = nil)
     if hidden
       player.hand.inject('') { |str, _card| "#{str}*" }
     else
       player.hand.inject('') { |str, card| str + "#{card} " }
     end
+  end
+
+  def win
+    bank.give_gain(current_player)
+    puts "You win! Your current account: #{current_player.account}"
+  end
+
+  def lose
+    bank.give_gain(diller)
+    puts "You lose! Your current account: #{current_player.account}"
+  end
+
+  def draw
+    bank.draw(current_player, diller)
+    puts "Draw. Your current account: #{current_player.account}"
   end
 
   def positive_account?(*players)
@@ -154,6 +123,29 @@ class BlackJack
       diller.account = 100
       current_player.account = 100
       raise RuntimeError
+    end
+  end
+
+  def limit_actions(player1, player2)
+    if player1.hand.size == 3 || player2.hand.size == 3
+      BlackJack.game_options.select do |option|
+        option == 'Face up'
+      end
+    end
+  end
+
+  def again?
+    puts 'Would you like to try again? Y/N'
+    input = gets.chomp
+    BlackJack.set_new_game if input == 'Y'
+  end
+
+  def ensure_action(action)
+    if action
+      send(*action)
+    else
+      puts 'Try again'
+      current_hand
     end
   end
 

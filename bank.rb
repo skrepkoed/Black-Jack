@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Bank
-  attr_accessor :bank_account
-
   def initialize
     @bank_account = 0
   end
@@ -24,4 +22,8 @@ class Bank
     player2.account += @bank_account / 2
     @bank_account = 0
   end
+
+  private
+
+  attr_accessor :bank_account
 end

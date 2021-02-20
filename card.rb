@@ -3,11 +3,11 @@
 class Card
   attr_reader :suit, :rank
 
-  Suits = { spade: 0x2660, heart: 0x2665, club: 0x2663, diamond: 0x2666 }.freeze
-  Ranks = [*2..10, :J, :Q, :K, :A].freeze
+  SUITS = { spade: 0x2660, heart: 0x2665, club: 0x2663, diamond: 0x2666 }.freeze
+  RANKS = [*2..10, :J, :Q, :K, :A].freeze
 
   def self.random_card
-    new(Ranks.sample, Suits.keys.sample)
+    new(RANKS.sample, SUITS.keys.sample)
   end
 
   def initialize(rank, suit)
@@ -16,7 +16,7 @@ class Card
   end
 
   def to_s
-    "#{rank}#{(Suits[suit]).chr('UTF-8')}"
+    "#{rank}#{(SUITS[suit]).chr('UTF-8')}"
   end
 
   def ==(other)
