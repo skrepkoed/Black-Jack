@@ -5,6 +5,7 @@ require_relative 'diller'
 require_relative 'bank'
 require_relative 'card_deck'
 require_relative 'evaluation_score'
+require_relative 'hand'
 class BlackJack
   include EvaluationScore
   def self.new_game
@@ -16,17 +17,13 @@ class BlackJack
   end
 
   class << self
-    attr_reader :current_player, :diller
+    attr_reader :current_player, :diller, :actions
   end
 
-  def self.game_options
-    @game_options['Draw additional card'] = [:draw_card, current_player]
-    @game_options
-  end
+  @actions = { player_draw_card: :player_draw_card, pass: :pass, face_up: :face_up }
 
-  @game_options = { 'Pass' => :pass,
-                    'Face up' => :face_up }
   attr_accessor :state
+  attr_reader :diller_hand, :player_hand
 
   def initialize(current_player, diller, bank, card_deck)
     @current_player = current_player
@@ -40,7 +37,9 @@ class BlackJack
 
   private
 
-  attr_accessor :current_player, :diller, :bank, :card_deck, :diller_hand, :player_hand
+  attr_accessor :current_player, :diller, :bank, :card_deck
+
+  attr_writer :diller_hand, :player_hand
 
   def player_name
     current_player.name ||= gets.chomp
@@ -63,21 +62,40 @@ class BlackJack
   end
 
   def card_distribution
-    player_hand.take_card(2, card_deck.random_card)
-    diller_hand.take_card(2, card_deck.random_card)
+    player_hand.take_cards(2, card_deck)
+    diller_hand.take_cards(2, card_deck)
     make_bet
   end
 
   def make_bet
     bank.bet
+    self.state = :current_hand
   end
 
-  def draw_card(player)
-    card_deck.distribute_cards(1, player.hand)
+  def draw_card(hand)
+    hand.take_cards(1, card_deck)
+  end
+
+  def player_draw_card
+    draw_card(player_hand)
+    diller_move
+  end
+
+  def diller_draw_card
+    draw_card(diller_hand)
+  end
+
+  def diller_move
+    send diller.next_move diller_hand.evaluate
+    self.state = :current_hand
+  end
+
+  def diller_pass
+    true
   end
 
   def pass
-    true
+    diller_move
   end
 
   def face_up
@@ -112,30 +130,13 @@ class BlackJack
     end
   end
 
-  def limit_actions(player1, player2)
-    if player1.hand.size == 3 || player2.hand.size == 3
-      BlackJack.game_options.select do |option|
-        option == 'Face up'
-      end
-    end
-  end
-
-  def again?
-    puts 'Would you like to try again? Y/N'
-    input = gets.chomp
-    BlackJack.new_game if input == 'Y'
-  end
-
-  def ensure_action(action)
-    if action
-      send(*action)
-    else
-      puts 'Try again'
-      current_hand
-    end
-  end
-
-  def clear_screen
-    puts "\e[H\e[2J"
+  def limit_actions
+    self.state = [:options]
+    state << if player_hand.cards_amount == 3
+               BlackJack.actions.select { |action, _argument| action == :face_up }
+             else
+               BlackJack.actions
+             end
+    state
   end
 end

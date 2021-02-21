@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module EvaluationScore
-  CARD_POINTS = { J: 10, Q: 10, K: 10, A: 11 }.freeze
   def define_winner
     current_player_score = evaluate_hand(current_player.hand)
     diller_score = evaluate_hand(diller.hand)
@@ -30,9 +29,5 @@ module EvaluationScore
     else
       false
     end
-  end
-
-  def define_card_point(card_rank)
-    CARD_POINTS[card_rank] || card_rank
   end
 end

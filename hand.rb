@@ -3,12 +3,13 @@
 class Hand
   attr_reader :current_cards
 
+  CARD_POINTS = { J: 10, Q: 10, K: 10, A: 11 }.freeze
   def initialize
     @current_cards = []
   end
 
-  def take_cards(number, card)
-    number.times { current_cards << card }
+  def take_cards(number, card_deck)
+    number.times { current_cards << card_deck.random_card }
   end
 
   def report_hand(hidden = nil)
@@ -19,8 +20,16 @@ class Hand
     end
   end
 
+  def cards_amount
+    current_cards.size
+  end
+
   def exceed_21?
     evaluate > 21
+  end
+
+  def define_card_point(card_rank)
+    CARD_POINTS[card_rank] || card_rank
   end
 
   def evaluate

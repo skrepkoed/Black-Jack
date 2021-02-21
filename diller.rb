@@ -6,7 +6,7 @@ class Diller < Player
     if hands_score >= 17
       :pass
     else
-      [:draw_card, self]
+      :diller_draw_card
     end
   end
 end
