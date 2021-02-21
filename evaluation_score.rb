@@ -2,17 +2,13 @@
 
 module EvaluationScore
   def define_winner
-    current_player_score = evaluate_hand(current_player.hand)
-    diller_score = evaluate_hand(diller.hand)
-    if draw?(current_player_score, diller_score)
+    if draw?(player_hand, diller_hand)
       draw
-    elsif !exceed_21?(current_player_score)
-      calculate_score(current_player_score, diller_score)
+    elsif !player_hand.exceed_21?
+      calculate_score(player_hand.evaluate, diller_hand.evaluate)
     else
       lose
     end
-    positive_account?(current_player, diller)
-    raise RuntimeError
   end
 
   def calculate_score(player1_score, player2_score)
@@ -24,7 +20,7 @@ module EvaluationScore
   end
 
   def draw?(player1_score, player2_score)
-    if player1_score == player2_score || exceed_21?(player1_score) && exceed_21?(player2_score)
+    if player1_score.evaluate == player2_score.evaluate || player1_score.exceed_21? && player2_score.exceed_21?
       true
     else
       false

@@ -9,15 +9,25 @@ require_relative 'hand'
 class BlackJack
   include EvaluationScore
   def self.new_game
-    @current_player = CurrentPlayer.new
-    @diller = Diller.new
-    @bank = Bank.new(current_player.account, diller.account)
-    new(@current_player, @diller, @bank, CardDeck.new)
-    # puts 'Goodbye!'
+    @current_player ||= CurrentPlayer.new
+    @diller ||= Diller.new
+    @bank ||= Bank.new(current_player.account, diller.account)
+    if @bank.positive_account?
+      new(@current_player, @diller, @bank, CardDeck.new)
+    else
+      reset
+      new_game
+    end
   end
 
   class << self
     attr_reader :current_player, :diller, :actions
+
+    def reset
+      @bank = nil
+      @current_player = nil
+      @diller = nil
+    end
   end
 
   @actions = { player_draw_card: :player_draw_card, pass: :pass, face_up: :face_up }
@@ -32,7 +42,7 @@ class BlackJack
     @card_deck = card_deck
     @diller_hand = Hand.new
     @player_hand = Hand.new
-    @state = :ask_name
+    @current_player.name ?  card_distribution : @state = :ask_name
   end
 
   private
@@ -44,21 +54,6 @@ class BlackJack
   def player_name
     current_player.name ||= gets.chomp
     card_distribution
-  end
-
-  def game
-    clear_screen
-    card_deck.distribute_cards(2, current_player.hand)
-    card_deck.distribute_cards(2, diller.hand)
-    bank.bet(current_player, diller)
-    current_hand ##
-    send(*diller.next_move(evaluate_hand(diller.hand)))
-    loop do
-      break if current_hand
-    end
-    face_up
-  rescue RuntimeError
-    again?
   end
 
   def card_distribution
@@ -99,35 +94,22 @@ class BlackJack
   end
 
   def face_up
-    puts "Your hand: #{report_hand(current_player)}"
-    puts "Diller`s hand: #{report_hand(diller)}"
     define_winner
   end
 
   def win
-    bank.give_gain(current_player)
-    puts "You win! Your current account: #{current_player.account}"
+    current_player.account, diller.account = *bank.player_win
+    self.state = [:end_game, :win, current_player.account]
   end
 
   def lose
-    bank.give_gain(diller)
-    puts "You lose! Your current account: #{current_player.account}"
+    current_player.account, diller.account = *bank.diller_win
+    self.state = [:end_game, :lose, current_player.account]
   end
 
   def draw
-    bank.draw(current_player, diller)
-    puts "Draw. Your current account: #{current_player.account}"
-  end
-
-  def positive_account?(*players)
-    players.each do |player|
-      next if player.account.positive?
-
-      puts 'Let`s try again'
-      diller.account = 100
-      current_player.account = 100
-      raise RuntimeError
-    end
+    current_player.account, diller.account = *bank.draw
+    self.state = [:end_game, :draw, current_player.account]
   end
 
   def limit_actions

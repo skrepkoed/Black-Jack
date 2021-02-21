@@ -35,7 +35,17 @@ class Hand
   def evaluate
     ranks = current_cards.map(&:rank)
     points = ranks.map { |rank| define_card_point(rank) }.sum
-    points -= 10 * (ranks.count { |rank| rank == :A } - 1) if points > 21 && current_cards.map(&:rank).include?(:A)
+    if points > 21 && current_cards.map(&:rank).include?(:A)
+      points = evaluate_aces(points, ranks.count { |rank| rank == :A })
+    end
+    points
+  end
+
+  def evaluate_aces(points, aces)
+    while points > 21 && aces.positive?
+      points -= 10
+      aces -= 1
+    end
     points
   end
 end
