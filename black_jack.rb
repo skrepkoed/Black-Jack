@@ -49,7 +49,7 @@ class BlackJack
     card_deck.distribute_cards(2, current_player.hand)
     card_deck.distribute_cards(2, diller.hand)
     bank.bet(current_player, diller)
-    current_hand
+    current_hand ##
     send(*diller.next_move(evaluate_hand(diller.hand)))
     loop do
       break if current_hand
@@ -90,14 +90,6 @@ class BlackJack
     puts "Your hand: #{report_hand(current_player)}"
     puts "Diller`s hand: #{report_hand(diller)}"
     define_winner
-  end
-
-  def report_hand(player, hidden = nil)
-    if hidden
-      player.hand.inject('') { |str, _card| "#{str}*" }
-    else
-      player.hand.inject('') { |str, card| str + "#{card} " }
-    end
   end
 
   def win

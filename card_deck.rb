@@ -13,10 +13,6 @@ class CardDeck
     cards.last
   end
 
-  def distribute_cards(number, hand)
-    number.times { hand << random_card }
-  end
-
   def add_card(card)
     @cards = [] if cards.size == 52
     if cards.include? card

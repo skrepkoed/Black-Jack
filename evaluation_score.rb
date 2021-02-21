@@ -32,17 +32,6 @@ module EvaluationScore
     end
   end
 
-  def exceed_21?(hands_points)
-    hands_points > 21
-  end
-
-  def evaluate_hand(hand)
-    ranks = hand.map(&:rank)
-    points = ranks.map { |rank| define_card_point(rank) }.sum
-    points -= 10 * (ranks.count { |rank| rank == :A } - 1) if points > 21 && hand.map(&:rank).include?(:A)
-    points
-  end
-
   def define_card_point(card_rank)
     CARD_POINTS[card_rank] || card_rank
   end
