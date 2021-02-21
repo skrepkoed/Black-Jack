@@ -62,9 +62,15 @@ class BlackJack
     make_bet
   end
 
+  def evaluated_hands(arg = nil)
+    { player_hand: player_hand.report_hand,
+      score: player_hand.evaluate,
+      diller_hand: diller_hand.report_hand(arg) }
+  end
+
   def make_bet
     bank.bet
-    self.state = :current_hand
+    self.state = [:current_hand, evaluated_hands(:hidden)]
   end
 
   def draw_card(hand)
@@ -82,7 +88,7 @@ class BlackJack
 
   def diller_move
     send diller.next_move diller_hand.evaluate
-    self.state = :current_hand
+    self.state = [:current_hand, evaluated_hands(:hidden)]
   end
 
   def diller_pass
@@ -99,17 +105,17 @@ class BlackJack
 
   def win
     current_player.account, diller.account = *bank.player_win
-    self.state = [:end_game, :win, current_player.account]
+    self.state = [:end_game, :win, current_player.account, evaluated_hands]
   end
 
   def lose
     current_player.account, diller.account = *bank.diller_win
-    self.state = [:end_game, :lose, current_player.account]
+    self.state = [:end_game, :lose, current_player.account, evaluated_hands]
   end
 
   def draw
     current_player.account, diller.account = *bank.draw
-    self.state = [:end_game, :draw, current_player.account]
+    self.state = [:end_game, :draw, current_player.account, evaluated_hands]
   end
 
   def limit_actions

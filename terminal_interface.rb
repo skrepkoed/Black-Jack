@@ -1,14 +1,22 @@
+# frozen_string_literal: true
+
 require_relative 'black_jack'
-require 'pry'
 class TerminalInterface
-  attr_accessor :action, :game, :game_options
+  GAME = BlackJack
+  def self.start
+    new
+  end
 
   def initialize
     @game_options = { player_draw_card: 'Draw card', pass: 'Pass', face_up: 'Face up',
                       win: 'You win!', lose: 'You lose!', draw: 'Draw.' }
-    @game = BlackJack.new_game
+    @game = GAME.new_game
     start_game
   end
+
+  private
+
+  attr_accessor :action, :game, :game_options
 
   def start_game
     clear_screen
@@ -25,10 +33,10 @@ class TerminalInterface
     :player_name
   end
 
-  def current_hand
-    puts "Your hand: #{game.player_hand.report_hand}"
-    puts "Current score: #{game.player_hand.evaluate}"
-    puts "Diller`s hand: #{game.diller_hand.report_hand :hidden}"
+  def current_hand(args)
+    puts "Your hand: #{args[:player_hand]}"
+    puts "Current score: #{args[:score]}"
+    puts "Diller`s hand: #{args[:diller_hand]}"
     :limit_actions
   end
 
@@ -42,10 +50,10 @@ class TerminalInterface
     ensure_action(action)
   end
 
-  def end_game(result, account)
-    puts "Your hand: #{game.player_hand.report_hand}"
-    puts "Current score: #{game.player_hand.evaluate}"
-    puts "Diller`s hand: #{game.diller_hand.report_hand}"
+  def end_game(result, account, args)
+    puts "Your hand: #{args[:player_hand]}"
+    puts "Current score: #{args[:score]}"
+    puts "Diller`s hand: #{args[:diller_hand]}"
     puts game_options[result] + current_account(account)
     raise RuntimeError
   end
@@ -59,7 +67,7 @@ class TerminalInterface
     if gets.chomp == 'Y'
       self.class.new
     else
-      BlackJack.reset
+      GAME.reset
       puts 'Goodbye'
     end
   end
