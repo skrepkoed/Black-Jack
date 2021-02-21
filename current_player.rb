@@ -4,8 +4,7 @@ require_relative 'player'
 class CurrentPlayer < Player
   attr_accessor :name
 
-  def initialize(name)
+  def initialize
     super
-    @name = name
   end
 end

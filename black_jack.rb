@@ -8,11 +8,11 @@ require_relative 'evaluation_score'
 class BlackJack
   include EvaluationScore
   def self.new_game
-    puts 'Enter your name:'
-    @current_player = CurrentPlayer.new(gets.chomp)
+    @current_player = CurrentPlayer.new
     @diller = Diller.new
-    set_new_game
-    puts 'Goodbye!'
+    @bank = Bank.new
+    new(@current_player, @diller, @bank, CardDeck.new)
+    # puts 'Goodbye!'
   end
 
   class << self
@@ -26,23 +26,23 @@ class BlackJack
 
   @game_options = { 'Pass' => :pass,
                     'Face up' => :face_up }
-
-  def self.set_new_game
-    [@current_player, @diller].map(&:default)
-    new(@current_player, @diller, Bank.new, CardDeck.new)
-  end
+  attr_accessor :state
 
   def initialize(current_player, diller, bank, card_deck)
     @current_player = current_player
     @diller = diller
     @bank = bank
     @card_deck = card_deck
-    game
+    @state = :ask_name
   end
 
   private
 
   attr_accessor :current_player, :diller, :bank, :card_deck
+
+  def player_name
+    current_player.name ||= gets.chomp
+  end
 
   def game
     clear_screen
@@ -57,25 +57,6 @@ class BlackJack
     face_up
   rescue RuntimeError
     again?
-  end
-
-  def current_hand
-    puts "Your hand: #{report_hand(current_player)}"
-    puts "Current score: #{evaluate_hand(current_player.hand)}"
-    puts "Diller`s hand: #{report_hand(diller, :hidden)}"
-    options
-  end
-
-  def options
-    puts 'Choose what you want to do next:'
-    game_options = limit_actions(current_player, diller)
-    game_options ||= BlackJack.game_options
-    options = game_options.keys
-    (1..options.size).each { |number| puts "#{number}. #{options[number - 1]}" }
-    input = gets.chomp.to_i
-    action = game_options[options[input - 1]]
-    clear_screen
-    ensure_action(action)
   end
 
   def draw_card(player)
@@ -129,7 +110,7 @@ class BlackJack
   def again?
     puts 'Would you like to try again? Y/N'
     input = gets.chomp
-    BlackJack.set_new_game if input == 'Y'
+    BlackJack.new_game if input == 'Y'
   end
 
   def ensure_action(action)
