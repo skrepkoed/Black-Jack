@@ -10,13 +10,13 @@ class BlackJack
   def self.new_game
     @current_player = CurrentPlayer.new
     @diller = Diller.new
-    @bank = Bank.new
+    @bank = Bank.new(current_player.account, diller.account)
     new(@current_player, @diller, @bank, CardDeck.new)
     # puts 'Goodbye!'
   end
 
   class << self
-    attr_reader :current_player
+    attr_reader :current_player, :diller
   end
 
   def self.game_options
@@ -33,15 +33,18 @@ class BlackJack
     @diller = diller
     @bank = bank
     @card_deck = card_deck
+    @diller_hand = Hand.new
+    @player_hand = Hand.new
     @state = :ask_name
   end
 
   private
 
-  attr_accessor :current_player, :diller, :bank, :card_deck
+  attr_accessor :current_player, :diller, :bank, :card_deck, :diller_hand, :player_hand
 
   def player_name
     current_player.name ||= gets.chomp
+    card_distribution
   end
 
   def game
@@ -57,6 +60,16 @@ class BlackJack
     face_up
   rescue RuntimeError
     again?
+  end
+
+  def card_distribution
+    player_hand.take_card(2, card_deck.random_card)
+    diller_hand.take_card(2, card_deck.random_card)
+    make_bet
+  end
+
+  def make_bet
+    bank.bet
   end
 
   def draw_card(player)
